@@ -55,6 +55,9 @@ const Myopia = (props) => {
   const [currQuest, setCurrQuest] = React.useState(second / interv)
   const currQuestRef = React.useRef(currQuest)
 
+  const [voiceText, setVoiceText] = useState("")
+  const [correct, setCorrect] = useState(0)
+
   useEffect(() => {
     const startRecognition = async () => {
       try {
@@ -64,33 +67,13 @@ const Myopia = (props) => {
         console.error(error);
       }
     };
-  
+
     const stopRecognition = async () => {
       try {
         await Voice.stop();
         console.log('end')
       } catch (error) {
         console.error(error);
-      }
-    };
-  
-    Voice.onSpeechResults = (event) => {
-      // console.log('Event', JSON.stringify(event))
-      try {
-        const text = event.value[0];
-        console.log(event.value[0]);
-        const parseHuruf = event.value[0].split('huruf ')
-        const previewHuruf = parseHuruf[1].toUpperCase()
-        console.log(`Yang Disebut ${previewHuruf}, yang ditampilkan ${alphabets[alphabetRef.current]}, Urutan huruf ${alphabetRef.current}`)
-        if (previewHuruf == alphabets[alphabetRef.current]) {
-          setResultLogo(1)
-        } else {
-          setResultLogo(0)
-        }
-        setRecognizedText(previewHuruf);
-      } catch (error) {
-        setRecognizedText('???')
-        setResultLogo(2)
       }
     };
 
@@ -101,7 +84,7 @@ const Myopia = (props) => {
         setAlphabet(26)
       }
       if (timerRef.current % interv == 4) {
-        setAlphabet(Math.floor(Math.random() * (26 - 0 + 1)) + 0)
+        setAlphabet(Math.floor(Math.random() * (26 - 0 + 1)) + 1)
         currQuestRef.current -= 1;
         setCurrQuest(currQuestRef.current)
         setResultLogo(2)
@@ -117,12 +100,56 @@ const Myopia = (props) => {
         setTime(timerRef.current % interv);
       }
     }, 1000);
+
     return () => {
       clearInterval(timerId);
     };
-  }
-    , [alphabet, alphabetRef, alphabets]);
+  }, [alphabet, alphabetRef, alphabets]);
 
+  useEffect(() => {
+    Voice.onSpeechResults = (event) => {
+      console.log('Event', JSON.stringify(event))
+      console.log('Alphabet Ref', JSON.stringify(alphabetRef))
+
+      try {
+        const text = event.value[0];
+        console.log('Event Value', event.value[0]);
+        const parseHuruf = event.value[0].split('huruf ')
+        const previewHuruf = parseHuruf[1].toUpperCase()
+
+        console.log('Parse Huruf', parseHuruf[1])
+        setVoiceText(parseHuruf[1])
+
+        // console.log(`Yang Disebut ${previewHuruf}, yang ditampilkan ${alphabets[alphabet]}, Urutan huruf ${alphabet}`)
+        if (previewHuruf == alphabets[alphabet]) {
+          setResultLogo(1)
+        } else {
+          setResultLogo(0)
+        }
+        setRecognizedText(previewHuruf);
+      } catch (error) {
+        setRecognizedText('???')
+        setResultLogo(2)
+      }
+    };
+  }, [alphabet])
+
+  useEffect(() => {
+    console.log('Alphabet Shown', JSON.stringify(alphabets[alphabet]))
+    console.log('Voice Text', voiceText)
+
+    if (voiceText.toUpperCase() == alphabets[alphabet]) {
+      setCorrect(correct + 1)
+    } else {
+      console.log('THOLOL')
+    }
+  }, [voiceText])
+  
+  useEffect(() => {
+    console.log('Correct', correct)
+  }, [correct])
+  
+  
 
   return (
     <View>
